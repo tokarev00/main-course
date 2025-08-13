@@ -1,0 +1,25 @@
+{
+  "name": "main-course",
+  "version": "1.0.0",
+  "main": "index.js",
+  "author": "Vladyslav Tokarev <tokarevvladyslav1@gmail.com>",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "dev": "nodemon ./dist/index.js",
+    "inspect": "nodemon --inspect ./dist/index.js",
+    "watch": "tsc -w",
+    "build": "tsc",
+    "start": "node ./dist/index.js"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.3",
+    "@types/node": "^24.2.1",
+    "nodemon": "^3.1.10",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.2"
+  },
+  "dependencies": {
+    "express": "^5.1.0"
+  }
+}
