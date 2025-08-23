@@ -1,12 +1,19 @@
-import {Router} from "express";
+import { Router} from "express";
 import {productsRepository} from "./products-repository.js";
+import {body} from "express-validator";
+import {inputValidationMiddleware} from "../middlewares/input-validation-middleware.js";
 
 
 export const productsRouter = Router({});
 
+const titleValidation = body('title')
+    .trim()
+    .isLength({min: 3, max: 10})
+    .withMessage('Title length must be greater than 2 and less than 11 symbols');
+
 productsRouter.get('/', (req, res) => {
 
-    const foundProducts = productsRepository.findProducts(req.query.title ? String(req.query.title): null);
+    const foundProducts = productsRepository.findProducts(req.query.title ? String(req.query.title) : null);
 
     return res.send(foundProducts);
 });
@@ -23,32 +30,30 @@ productsRouter.get('/:id', (req, res) => {
         res.send(404);
     }
 });
-productsRouter.post('/', (req, res) => {
-    if (!req.body.title) {
-        return res.send(400);
-    }
-    const newProduct = productsRepository.createProduct(req.body.title);
-    res.status(201).send(newProduct);
-});
-productsRouter.put('/:id', (req, res) => {
-    const id = Number(req.params.id);
-    const title = req.body.title;
+productsRouter.post('/',
+    titleValidation,
+    inputValidationMiddleware,
+    (req, res) => {
+        const newProduct = productsRepository.createProduct(req.body.title);
+        res.status(201).send(newProduct);
+    });
+productsRouter.put('/:id',
+    titleValidation,
+    inputValidationMiddleware,
+    (req, res) => {
+        const id = Number(req.params.id);
+        const title = req.body.title;
 
-    // Валидация title
-    if (!title || typeof title !== 'string' || title.length === 0) {
-        res.sendStatus(400);
-        return;
-    }
 
-    const updatedProduct = productsRepository.updateProduct(id, title);
+        const updatedProduct = productsRepository.updateProduct(id, title);
 
-    if (!updatedProduct) {
-        res.sendStatus(404);
-        return;
-    }
+        if (!updatedProduct) {
+            res.sendStatus(404);
+            return;
+        }
 
-    res.send(updatedProduct);
-});
+        res.send(updatedProduct);
+    });
 productsRouter.delete('/:id', (req, res) => {
     const id = Number(req.params.id);
 
