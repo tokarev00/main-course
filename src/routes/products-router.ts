@@ -1,7 +1,9 @@
 import { Router} from "express";
-import {productsRepository} from "./products-repository.js";
+import {productsRepository} from "../repositories/products-repository.js";
 import {body} from "express-validator";
 import {inputValidationMiddleware} from "../middlewares/input-validation-middleware.js";
+import {validateMongoIdMiddleware} from "../middlewares/object-id-validation-middleware.js";
+import {ObjectId} from "mongodb";
 
 
 export const productsRouter = Router({});
@@ -11,41 +13,52 @@ const titleValidation = body('title')
     .isLength({min: 3, max: 10})
     .withMessage('Title length must be greater than 2 and less than 11 symbols');
 
-productsRouter.get('/', (req, res) => {
+productsRouter.get(
+    '/',
+    async (req, res) => {
 
-    const foundProducts = productsRepository.findProducts(req.query.title ? String(req.query.title) : null);
+    const foundProducts = await productsRepository.findProducts(req.query.title ? String(req.query.title) : null);
 
     return res.send(foundProducts);
 });
-productsRouter.get('/:id', (req, res) => {
-    const id = +req.params.id;
-    if (!id || Number.isNaN(id)) {
-        return res.status(400).send('Id must be number');
-    }
-    const product = productsRepository.getProductById(id);
+productsRouter.get(
+    '/:id',
+    ...validateMongoIdMiddleware,
+    async (req, res) => {
+    const id = req.params.id;
+
+    const product = await productsRepository.getProductById(new ObjectId(id));
 
     if (product) {
         res.send(product);
     } else {
         res.send(404);
     }
-});
-productsRouter.post('/',
+}
+);
+
+
+productsRouter.post(
+    '/',
     titleValidation,
     inputValidationMiddleware,
-    (req, res) => {
-        const newProduct = productsRepository.createProduct(req.body.title);
+    async (req, res) => {
+        const newProduct = await productsRepository.createProduct(req.body.title);
         res.status(201).send(newProduct);
     });
-productsRouter.put('/:id',
+
+
+productsRouter.put(
+    '/:id',
+    ...validateMongoIdMiddleware,
     titleValidation,
     inputValidationMiddleware,
-    (req, res) => {
-        const id = Number(req.params.id);
+    async (req, res) => {
+        const id = req.params.id;
         const title = req.body.title;
 
 
-        const updatedProduct = productsRepository.updateProduct(id, title);
+        const updatedProduct = await productsRepository.updateProduct(new ObjectId(id), title);
 
         if (!updatedProduct) {
             res.sendStatus(404);
@@ -54,21 +67,21 @@ productsRouter.put('/:id',
 
         res.send(updatedProduct);
     });
-productsRouter.delete('/:id', (req, res) => {
-    const id = Number(req.params.id);
 
-    // Проверка: является ли id числом и не NaN
-    if (isNaN(id)) {
-        res.sendStatus(400); // Bad Request
-        return;
-    }
 
-    const isDeleted = productsRepository.deleteProduct(id);
+productsRouter.delete(
+    '/:id',
+    ...validateMongoIdMiddleware,
+    async (req, res) => {
+    const id = req.params.id;
+
+
+    const isDeleted = await productsRepository.deleteProduct(new ObjectId(id));
 
     if (isDeleted) {
-        res.sendStatus(204); // No Content
+        res.sendStatus(204);
     } else {
-        res.sendStatus(404); // Not Found
+        res.sendStatus(404);
     }
 });
 
