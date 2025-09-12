@@ -8,14 +8,13 @@ export type ProductType = {
 
 
 export const productsRepository = {
-     findProducts: async (searchTerm: string | null): Promise<Array<ProductType>> => {
+    findProducts: async (searchTerm: string | null): Promise<Array<ProductType>> => {
         const filter = searchTerm && searchTerm.length > 0
                 ? { title: { $regex: searchTerm, $options: 'i' } }
                 : {};
         return await productsCollection.find(filter).toArray();
     },
-    createProduct: async (title: string): Promise<ProductType> => {
-        const newProduct: ProductType = { _id: new ObjectId(), title };
+    createProduct: async (newProduct: ProductType): Promise<ProductType> => {
         await productsCollection.insertOne(newProduct);
         return newProduct;
     },

@@ -1,9 +1,9 @@
 import { Router} from "express";
-import {productsRepository} from "../repositories/products-repository.js";
 import {body} from "express-validator";
 import {inputValidationMiddleware} from "../middlewares/input-validation-middleware.js";
 import {validateMongoIdMiddleware} from "../middlewares/object-id-validation-middleware.js";
 import {ObjectId} from "mongodb";
+import {ProductsService} from "../domain/products-service.js";
 
 
 export const productsRouter = Router({});
@@ -17,7 +17,7 @@ productsRouter.get(
     '/',
     async (req, res) => {
 
-    const foundProducts = await productsRepository.findProducts(req.query.title ? String(req.query.title) : null);
+    const foundProducts = await ProductsService.findProducts(req.query.title ? String(req.query.title) : null);
 
     return res.send(foundProducts);
 });
@@ -27,7 +27,7 @@ productsRouter.get(
     async (req, res) => {
     const id = req.params.id;
 
-    const product = await productsRepository.getProductById(new ObjectId(id));
+    const product = await ProductsService.getProductById(new ObjectId(id));
 
     if (product) {
         res.send(product);
@@ -43,7 +43,7 @@ productsRouter.post(
     titleValidation,
     inputValidationMiddleware,
     async (req, res) => {
-        const newProduct = await productsRepository.createProduct(req.body.title);
+        const newProduct = await ProductsService.createProduct(req.body.title);
         res.status(201).send(newProduct);
     });
 
@@ -58,7 +58,7 @@ productsRouter.put(
         const title = req.body.title;
 
 
-        const updatedProduct = await productsRepository.updateProduct(new ObjectId(id), title);
+        const updatedProduct = await ProductsService.updateProduct(new ObjectId(id), title);
 
         if (!updatedProduct) {
             res.sendStatus(404);
@@ -76,7 +76,7 @@ productsRouter.delete(
     const id = req.params.id;
 
 
-    const isDeleted = await productsRepository.deleteProduct(new ObjectId(id));
+    const isDeleted = await ProductsService.deleteProduct(new ObjectId(id));
 
     if (isDeleted) {
         res.sendStatus(204);
